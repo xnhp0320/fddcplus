@@ -1,7 +1,7 @@
 CPP = g++
-CFLGA = -lm -g -Wall -Wsign-compare -Wformat -std=c++0x -O2
+CFLGA = -lm -g -Wall -Wsign-compare -Wformat -std=c++0x -O2 
 
-SRC=fastrr.cc rulesutils.cc fdd.cc set.cc
+SRC=fastrr.cc rulesutils.cc fdd.cc set.cc pdd.cc
 OBJ=$(SRC:.cc=.o)
 
 
@@ -9,7 +9,7 @@ OBJ=$(SRC:.cc=.o)
 	${CPP} ${CFLGA} -c $^ -o $@ 
 
 sp: ${OBJ}
-	${CPP} ${CFLGA} -o fastrr ${OBJ} 
+	${CPP} ${CFLGA} -o fastrr ${OBJ} -lrt
 
 all: fastrr 
 

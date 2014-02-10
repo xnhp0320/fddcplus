@@ -19,6 +19,7 @@
 #include "fastrr.h"
 #include "rulesutils.h"
 #include "fdd.h"
+#include "pdd.h"
 
 using namespace std;
 
@@ -26,14 +27,21 @@ using namespace std;
 vector<pc_rule> classifier;
 FILE *fpr;
 FILE *fpt;
+vector<int> order;
+
 
 
 
 void parseargs(int argc, char *argv[])
 {
     int	c;
-    while ((c = getopt(argc, argv, "r:t:")) != -1) {
+    while ((c = getopt(argc, argv, "o:r:t:")) != -1) {
         switch (c) {
+            case 'o':
+                int tmp[MAXDIMENSIONS];
+                sscanf(optarg,"%1d%1d%1d%1d%1d", tmp,tmp+1,tmp+2,tmp+3,tmp+4); 
+                order.assign(tmp, tmp+5);
+                break;
             case 'r':
                 fpr = fopen(optarg, "r");
                 break;
@@ -204,13 +212,24 @@ int main(int argc, char *argv[])
     loadrules(fpr, classifier);
     load_rule_ptr(classifier, p_classifier, 0, classifier.size() - 1);
     init_boundary(rb); 
+   
 
-    list<pc_rule*> swws;
-    list<pc_rule*> ww;
-    flt_rules(p_classifier, swws, ww);
-    remove_by_fdd(swws, p_classifier.size());
-    remove_by_fdd(ww,   p_classifier.size());
-    remove_by_fdd(p_classifier, p_classifier.size());
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    //fdd_node * fn = build_pdd_tree(classifier);
+    fdd_node * fn = build_fdd_fast(classifier, order);
+    clock_gettime(CLOCK_MONOTONIC, &end);
+
+    unsigned nsec = start.tv_sec == end.tv_sec ? (end.tv_nsec - start.tv_nsec) : (end.tv_nsec - start.tv_nsec + 1e9);
+    cout<<"Using time "<<nsec<<"ns "<<nsec/1e9<<"s"<<endl;
+
+
+    //list<pc_rule*> swws;
+    //list<pc_rule*> ww;
+    //flt_rules(p_classifier, swws, ww);
+    //remove_by_fdd(swws, p_classifier.size());
+    //remove_by_fdd(ww,   p_classifier.size());
+    //remove_by_fdd(p_classifier, p_classifier.size());
 
 
     //for(list<pc_rule*>::iterator it = p_classifier.begin();

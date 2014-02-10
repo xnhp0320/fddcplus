@@ -171,9 +171,9 @@ int loadrules(FILE *fp, vector<pc_rule> &classifier) {
         if ((rule.field[3].low == 0) && (rule.field[3].high == 65535)) {
             wild++;
         }
-        if (wild != 5) {
-            classifier.push_back(rule);
-        }
+        //if (wild != 5) {
+        classifier.push_back(rule);
+        //}
         i++;
     }
     return i;

@@ -119,6 +119,14 @@ list<range> build_interval(list<point> &lp)
     return move(lr);
 }
 
+void split_dim(const vector<pc_rule> &pc, fdd_node* fn, int dim, list<range> &lr_choose) 
+{
+    list<point> lp = build_line_points(pc, fn->rulelist, dim);
+    list<range> lr = build_interval(lp);
+    lr_choose = move(lr);
+}
+
+
 void choose_dim(const vector<pc_rule> &pc, fdd_node* fn, int &dimension, list<range> &lr_choose)
 {
     double min_hist = 0xffffffff;
@@ -189,6 +197,52 @@ void make_edges(fdd_node *fn, list<range> &lr,
 }
 
 
+fdd_node *build_fdd_fast(const vector<pc_rule> &classifier, const vector<int> &order)
+{
+    fdd_node *fn = new fdd_node;
+    for(size_t i = 0; i< classifier.size(); i++) {
+        fn->rulelist.push_back(i);
+    }
+    for(int i = 0; i< MAXDIMENSIONS;i++)
+        fn->availdim.push_back(i);
+
+    vector<fdd_node*> thislevel;
+    vector<fdd_node*> nextlevel;
+    thislevel.push_back(fn);
+
+    for(int level= 0; level< MAXDIMENSIONS; level++) {
+        for(auto fnit = thislevel.begin();
+                fnit != thislevel.end();
+                fnit ++) {
+            fdd_node *fn = *fnit;
+
+            int dim = order[level];
+            list<range> lr;
+
+            split_dim(classifier, fn, dim, lr); 
+            
+            fn->field = dim;
+            make_edges(fn, lr, classifier);
+
+            for(auto e = fn->edges.begin(); e != fn->edges.end(); e++) {
+                nextlevel.push_back(e->fn);
+            }
+        }
+        cout<<"level "<<level<<" "<<thislevel.size()<<endl;
+        thislevel = move(nextlevel);
+    }
+
+    for(auto fnit = thislevel.begin(); 
+            fnit != thislevel.end();
+            fnit ++) {
+        (*fnit)->isLeaf = 1;
+    }
+    cout<<"leaf level "<<thislevel.size()<<endl;
+    return fn;
+}
+
+
+
 fdd_node *build_pdd_tree(const vector<pc_rule> &classifier)
 {
     fdd_node *fn = new fdd_node;
@@ -212,6 +266,7 @@ fdd_node *build_pdd_tree(const vector<pc_rule> &classifier)
             list<range> lr;
 
             choose_dim(classifier, fn, dim, lr); 
+            
             fn->field = dim;
             make_edges(fn, lr, classifier);
 
@@ -219,7 +274,7 @@ fdd_node *build_pdd_tree(const vector<pc_rule> &classifier)
                 nextlevel.push_back(e->fn);
             }
         }
-        cout<<"level "<<level<<" "<<thislevel.size()<<endl;
+        //cout<<"level "<<level<<" "<<thislevel.size()<<endl;
         thislevel = move(nextlevel);
     }
 
@@ -228,7 +283,7 @@ fdd_node *build_pdd_tree(const vector<pc_rule> &classifier)
             fnit ++) {
         (*fnit)->isLeaf = 1;
     }
-    cout<<"leaf level "<<thislevel.size()<<endl;
+    //cout<<"leaf level "<<thislevel.size()<<endl;
     return fn;
 }
 

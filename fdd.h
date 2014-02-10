@@ -51,7 +51,11 @@ struct fdd_node
     int field;
     int isLeaf;
     vector<edge> edges;
-    list<int> rulelist;
+    vector<int> rulelist;
+    vector<int> availdim;
+    fdd_node(): field(-1), isLeaf(0) {
+
+    }
 };
 
 
